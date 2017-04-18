@@ -33,8 +33,8 @@
 
 - (void)pluginInitialize {
 
-    NSLog(@"Cordova BLE Central Plugin");
-    NSLog(@"(c)2014-2016 Don Coleman");
+    DDLogInfo(@"Cordova BLE Central Plugin");
+    DDLogInfo(@"(c)2014-2016 Don Coleman");
 
     [super pluginInitialize];
 
@@ -62,20 +62,20 @@
 
 - (void)connect:(CDVInvokedUrlCommand *)command {
 
-    NSLog(@"connect");
+    DDLogInfo(@"connect");
     NSString *uuid = [command.arguments objectAtIndex:0];
 
     CBPeripheral *peripheral = [self findPeripheralByUUID:uuid];
 
     if (peripheral) {
-        NSLog(@"Connecting to peripheral with UUID : %@", uuid);
+        DDLogInfo(@"Connecting to peripheral with UUID : %@", uuid);
 
         [connectCallbacks setObject:[command.callbackId copy] forKey:[peripheral uuidAsString]];
         [manager connectPeripheral:peripheral options:nil];
 
     } else {
         NSString *error = [NSString stringWithFormat:@"Could not find peripheral %@.", uuid];
-        NSLog(@"%@", error);
+        DDLogError(@"%@", error);
         CDVPluginResult *pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -85,7 +85,7 @@
 
 // disconnect: function (device_id, success, failure) {
 - (void)disconnect:(CDVInvokedUrlCommand*)command {
-    NSLog(@"disconnect");
+    DDLogInfo(@"disconnect");
 
     NSString *uuid = [command.arguments objectAtIndex:0];
     CBPeripheral *peripheral = [self findPeripheralByUUID:uuid];
@@ -103,7 +103,7 @@
 
 // read: function (device_id, service_uuid, characteristic_uuid, success, failure) {
 - (void)read:(CDVInvokedUrlCommand*)command {
-    NSLog(@"read");
+    DDLogInfo(@"read");
 
     BLECommandContext *context = [self getData:command prop:CBCharacteristicPropertyRead];
     if (context) {
@@ -150,7 +150,7 @@
 
 // writeWithoutResponse: function (device_id, service_uuid, characteristic_uuid, value, success, failure) {
 - (void)writeWithoutResponse:(CDVInvokedUrlCommand*)command {
-    NSLog(@"writeWithoutResponse");
+    DDLogInfo(@"writeWithoutResponse");
 
     BLECommandContext *context = [self getData:command prop:CBCharacteristicPropertyWriteWithoutResponse];
     NSData *message = [command.arguments objectAtIndex:3]; // This is binary
@@ -175,7 +175,7 @@
 // success callback is called on notification
 // notify: function (device_id, service_uuid, characteristic_uuid, success, failure) {
 - (void)startNotification:(CDVInvokedUrlCommand*)command {
-    NSLog(@"registering for notification");
+    DDLogInfo(@"registering for notification");
 
     BLECommandContext *context = [self getData:command prop:CBCharacteristicPropertyNotify]; // TODO name this better
 
@@ -195,7 +195,7 @@
 
 // stopNotification: function (device_id, service_uuid, characteristic_uuid, success, failure) {
 - (void)stopNotification:(CDVInvokedUrlCommand*)command {
-    NSLog(@"stop notification");
+    DDLogInfo(@"stop notification");
 
     BLECommandContext *context = [self getData:command prop:CBCharacteristicPropertyNotify];
 
@@ -231,7 +231,7 @@
 
 - (void)scan:(CDVInvokedUrlCommand*)command {
 
-    NSLog(@"scan");
+    DDLogInfo(@"scan");
     discoverPeripherialCallbackId = [command.callbackId copy];
 
     NSArray *serviceUUIDStrings = [command.arguments objectAtIndex:0];
@@ -255,7 +255,7 @@
 
 - (void)startScan:(CDVInvokedUrlCommand*)command {
 
-    NSLog(@"startScan");
+    DDLogInfo(@"startScan");
     discoverPeripherialCallbackId = [command.callbackId copy];
     NSArray *serviceUUIDStrings = [command.arguments objectAtIndex:0];
     NSMutableArray *serviceUUIDs = [NSMutableArray new];
@@ -270,7 +270,7 @@
 }
 
 - (void)startScanWithOptions:(CDVInvokedUrlCommand*)command {
-    NSLog(@"startScanWithOptions");
+    DDLogInfo(@"startScanWithOptions");
     discoverPeripherialCallbackId = [command.callbackId copy];
     NSArray *serviceUUIDStrings = [command.arguments objectAtIndex:0];
     NSMutableArray *serviceUUIDs = [NSMutableArray new];
@@ -293,7 +293,7 @@
 
 - (void)stopScan:(CDVInvokedUrlCommand*)command {
 
-    NSLog(@"stopScan");
+    DDLogInfo(@"stopScan");
 
     [manager stopScan];
 
@@ -329,7 +329,7 @@
         NSString *state = [bluetoothStates objectForKey:[NSNumber numberWithInt:bluetoothState]];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:state];
         [pluginResult setKeepCallbackAsBool:TRUE];
-        NSLog(@"Start state notifications on callback %@", stateCallbackId);
+        DDLogInfo(@"Start state notifications on callback %@", stateCallbackId);
     } else {
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"State callback already registered"];
     }
@@ -356,7 +356,7 @@
 }
 
 - (void)readRSSI:(CDVInvokedUrlCommand*)command {
-    NSLog(@"readRSSI");
+    DDLogInfo(@"readRSSI");
     NSString *uuid = [command.arguments objectAtIndex:0];
 
     CBPeripheral *peripheral = [self findPeripheralByUUID:uuid];
@@ -366,7 +366,7 @@
         [peripheral readRSSI];
     } else {
         NSString *error = [NSString stringWithFormat:@"Need to be connected to peripheral %@ to read RSSI.", uuid];
-        NSLog(@"%@", error);
+        DDLogError(@"%@", error);
         CDVPluginResult *pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -376,7 +376,7 @@
 #pragma mark - timers
 
 -(void)stopScanTimer:(NSTimer *)timer {
-    NSLog(@"stopScanTimer");
+    DDLogInfo(@"stopScanTimer");
 
     [manager stopScan];
 
@@ -395,7 +395,7 @@
     if (discoverPeripherialCallbackId) {
         CDVPluginResult *pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[peripheral asDictionary]];
-        NSLog(@"Discovered %@", [peripheral asDictionary]);
+        DDLogInfo(@"Discovered %@", [peripheral asDictionary]);
         [pluginResult setKeepCallbackAsBool:TRUE];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverPeripherialCallbackId];
     }
@@ -404,13 +404,13 @@
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
-    NSLog(@"Status of CoreBluetooth central manager changed %ld %@", (long)central.state, [self centralManagerStateToString: central.state]);
+    DDLogInfo(@"Status of CoreBluetooth central manager changed %ld %@", (long)central.state, [self centralManagerStateToString: central.state]);
 
     if (central.state == CBCentralManagerStateUnsupported)
     {
-        NSLog(@"=============================================================");
-        NSLog(@"WARNING: This hardware does not support Bluetooth Low Energy.");
-        NSLog(@"=============================================================");
+        DDLogError(@"=============================================================");
+        DDLogError(@"WARNING: This hardware does not support Bluetooth Low Energy.");
+        DDLogError(@"=============================================================");
     }
 
     if (stateCallbackId != nil) {
@@ -418,7 +418,7 @@
         NSString *state = [bluetoothStates objectForKey:@(central.state)];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:state];
         [pluginResult setKeepCallbackAsBool:TRUE];
-        NSLog(@"Report Bluetooth state \"%@\" on callback %@", state, stateCallbackId);
+        DDLogInfo(@"Report Bluetooth state \"%@\" on callback %@", state, stateCallbackId);
         [self.commandDelegate sendPluginResult:pluginResult callbackId:stateCallbackId];
     }
 
@@ -432,7 +432,7 @@
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
 
-    NSLog(@"didConnectPeripheral");
+    DDLogInfo(@"didConnectPeripheral");
 
     peripheral.delegate = self;
 
@@ -444,7 +444,7 @@
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
 
-    NSLog(@"didDisconnectPeripheral");
+    DDLogInfo(@"didDisconnectPeripheral");
 
     NSString *connectCallbackId = [connectCallbacks valueForKey:[peripheral uuidAsString]];
     [connectCallbacks removeObjectForKey:[peripheral uuidAsString]];
@@ -472,7 +472,7 @@
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
 
-    NSLog(@"didFailToConnectPeripheral");
+    DDLogError(@"didFailToConnectPeripheral");
 
     NSString *connectCallbackId = [connectCallbacks valueForKey:[peripheral uuidAsString]];
     [connectCallbacks removeObjectForKey:[peripheral uuidAsString]];
@@ -487,7 +487,7 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error {
 
-    NSLog(@"didDiscoverServices");
+    DDLogInfo(@"didDiscoverServices");
 
     // save the services to tell when all characteristics have been discovered
     NSMutableSet *servicesForPeriperal = [NSMutableSet new];
@@ -501,7 +501,7 @@
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
 
-    NSLog(@"didDiscoverCharacteristicsForService");
+    DDLogInfo(@"didDiscoverCharacteristicsForService");
 
     NSString *peripheralUUIDString = [peripheral uuidAsString];
     NSString *connectCallbackId = [connectCallbacks valueForKey:peripheralUUIDString];
@@ -519,15 +519,15 @@
         [connectCallbackLatches removeObjectForKey:peripheralUUIDString];
     }
 
-    NSLog(@"Found characteristics for service %@", service);
+    DDLogInfo(@"Found characteristics for service %@", service);
     for (CBCharacteristic *characteristic in service.characteristics) {
-        NSLog(@"Characteristic %@", characteristic);
+        DDLogInfo(@"Characteristic %@", characteristic);
     }
 
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
-    NSLog(@"didUpdateValueForCharacteristic");
+    DDLogVerbose(@"didUpdateValueForCharacteristic");
 
     NSString *key = [self keyForPeripheral: peripheral andCharacteristic:characteristic];
     NSString *notifyCallbackId = [notificationCallbacks objectForKey:key];
@@ -568,7 +568,7 @@
     if (stopNotificationCallbackId) {
 
         if (error) {
-            NSLog(@"%@", error);
+            DDLogError(@"%@", error);
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
         } else {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -579,7 +579,7 @@
 
     } else if (notificationCallbackId && error) {
 
-        NSLog(@"%@", error);
+        DDLogError(@"%@", error);
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:notificationCallbackId];
     }
@@ -596,7 +596,7 @@
     if (writeCallbackId) {
         CDVPluginResult *pluginResult = nil;
         if (error) {
-            NSLog(@"%@", error);
+            DDLogError(@"%@", error);
             pluginResult = [CDVPluginResult
                 resultWithStatus:CDVCommandStatus_ERROR
                 messageAsString:[error localizedDescription]
@@ -615,13 +615,13 @@
 }
 
 - (void)peripheral:(CBPeripheral*)peripheral didReadRSSI:(NSNumber*)rssi error:(NSError*)error {
-    NSLog(@"didReadRSSI %@", rssi);
+    DDLogInfo(@"didReadRSSI %@", rssi);
     NSString *key = [peripheral uuidAsString];
     NSString *readRSSICallbackId = [readRSSICallbacks objectForKey: key];
     if (readRSSICallbackId) {
         CDVPluginResult* pluginResult = nil;
         if (error) {
-            NSLog(@"%@", error);
+            DDLogError(@"%@", error);
             pluginResult = [CDVPluginResult
                 resultWithStatus:CDVCommandStatus_ERROR
                 messageAsString:[error localizedDescription]];
@@ -668,7 +668,7 @@
 // Find a characteristic in service with a specific property
 -(CBCharacteristic *) findCharacteristicFromUUID:(CBUUID *)UUID service:(CBService*)service prop:(CBCharacteristicProperties)prop
 {
-    NSLog(@"Looking for %@ with properties %lu", UUID, (unsigned long)prop);
+    DDLogInfo(@"Looking for %@ with properties %lu", UUID, (unsigned long)prop);
     for(int i=0; i < service.characteristics.count; i++)
     {
         CBCharacteristic *c = [service.characteristics objectAtIndex:i];
@@ -682,7 +682,7 @@
 // Find a characteristic in service by UUID
 -(CBCharacteristic *) findCharacteristicFromUUID:(CBUUID *)UUID service:(CBService*)service
 {
-    NSLog(@"Looking for %@", UUID);
+    DDLogInfo(@"Looking for %@", UUID);
     for(int i=0; i < service.characteristics.count; i++)
     {
         CBCharacteristic *c = [service.characteristics objectAtIndex:i];
@@ -709,7 +709,7 @@
 
 // expecting deviceUUID, serviceUUID, characteristicUUID in command.arguments
 -(BLECommandContext*) getData:(CDVInvokedUrlCommand*)command prop:(CBCharacteristicProperties)prop {
-    NSLog(@"getData");
+    DDLogInfo(@"getData");
 
     CDVPluginResult *pluginResult = nil;
 
@@ -724,7 +724,7 @@
 
     if (!peripheral) {
 
-        NSLog(@"Could not find peripherial with UUID %@", deviceUUIDString);
+        DDLogError(@"Could not find peripherial with UUID %@", deviceUUIDString);
 
         NSString *errorMessage = [NSString stringWithFormat:@"Could not find peripherial with UUID %@", deviceUUIDString];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorMessage];
@@ -737,7 +737,7 @@
 
     if (!service)
     {
-        NSLog(@"Could not find service with UUID %@ on peripheral with UUID %@",
+        DDLogError(@"Could not find service with UUID %@ on peripheral with UUID %@",
               serviceUUIDString,
               peripheral.identifier.UUIDString);
 
@@ -765,7 +765,7 @@
 
     if (!characteristic)
     {
-        NSLog(@"Could not find characteristic with UUID %@ on service with UUID %@ on peripheral with UUID %@",
+        DDLogError(@"Could not find characteristic with UUID %@ on service with UUID %@ on peripheral with UUID %@",
               characteristicUUIDString,
               serviceUUIDString,
               peripheral.identifier.UUIDString);
