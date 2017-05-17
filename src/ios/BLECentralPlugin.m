@@ -395,7 +395,9 @@
     if (discoverPeripherialCallbackId) {
         CDVPluginResult *pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[peripheral asDictionary]];
+     /* don't slow harry down
         DDLogInfo(@"Discovered %@", [peripheral asDictionary]);
+        */
         [pluginResult setKeepCallbackAsBool:TRUE];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:discoverPeripherialCallbackId];
     }
